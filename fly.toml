@@ -1,0 +1,61 @@
+# AI Job Hunter — Fly.io configuration
+# Developed by Lulamile Mkhungela.
+#
+#   fly volumes create ajh_data --region jnb --size 1
+#   fly secrets set JWT_SECRET=... SMTP_PASS=... LLM_API_KEY=...
+#   fly deploy
+#
+# See docs/DEPLOY-FLY.md for the full walkthrough.
+
+app = "ai-job-hunter"
+primary_region = "jnb"          # Johannesburg — closest region for South Africa
+
+kill_signal = "SIGTERM"
+kill_timeout = "30s"            # let the scheduler finish its current tick
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8787"
+  HOST = "0.0.0.0"
+  DATA_DIR = "/data"
+  CONNECTOR_NETWORK_ENABLED = "true"
+  SCHEDULER_ENABLED = "true"
+  SCHEDULER_TICK_MS = "15000"
+  # Leave this TRUE for your first deploy so you can create your own account, then
+  # set it to "false" and run `fly deploy` again to close the door behind you.
+  ALLOW_REGISTRATION = "true"
+  AUTO_SEED_DEMO = "false"
+
+# The SQLite database, uploaded CVs and generated documents.
+[mounts]
+  source = "ajh_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+
+  # IMPORTANT: "off", not "stop" or "suspend".
+  # Fly's autostop is driven by *connection* idle time, not by whether your app is
+  # busy — background work does not count as activity. This app runs a scheduler that
+  # must keep hunting around the clock, so the machine has to stay running. With
+  # autostop on, the hunt silently pauses whenever nobody has the dashboard open.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+    method = "GET"
+    path = "/api/health"
+
+# One machine only. The scheduler is durable and the database is SQLite, so a second
+# machine in another region would run duplicate hunts against the same boards and
+# fight over the same file.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

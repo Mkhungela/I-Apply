@@ -1,0 +1,24 @@
+{
+  "name": "ai-job-hunter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Job Hunter - autonomous job search, matching and application platform",
+  "type": "module",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "install:all": "npm install",
+    "build": "npm run build --workspace client",
+    "start": "node server/src/index.js",
+    "dev:server": "node --watch server/src/index.js",
+    "dev:client": "npm run dev --workspace client",
+    "test": "node --test server/test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "author": "Lulamile Mkhungela <mkhungela.l@gmail.com> (https://github.com/LulamileMkhungela)",
+  "license": "UNLICENSED"
+}
